@@ -44,6 +44,14 @@ export class TrackService {
     return track;
   }
 
+  findOne(id: string): Track {
+    const track = this.tracks.find((track) => track.id === id);
+    if (!track) {
+      throw new NotFoundException(`Track with id ${id} not found`);
+    }
+    return track;
+  }
+
   delete(id: string): void {
     if (!isUUID(id)) throw new BadRequestException('Invalid UUID');
     const index = this.tracks.findIndex((t) => t.id === id);

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Artist } from './interfaces/artist.interface';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateArtistDto } from './dto/create-artist.dto';
@@ -26,6 +26,14 @@ export class ArtistService {
     const artist = this.getById(id);
     if (!artist) return undefined;
     Object.assign(artist, dto);
+    return artist;
+  }
+
+  findOne(id: string): Artist {
+    const artist = this.artists.find((artist) => artist.id === id);
+    if (!artist) {
+      throw new NotFoundException(`Artist with id ${id} not found`);
+    }
     return artist;
   }
 
