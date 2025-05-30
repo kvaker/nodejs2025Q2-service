@@ -1,0 +1,53 @@
+import { Injectable } from '@nestjs/common';
+import { Album } from './interfaces/album.interface';
+import { CreateAlbumDto } from './dto/create-album.dto';
+import { UpdateAlbumDto } from './dto/update-album.dto';
+import { v4 as uuidv4 } from 'uuid';
+
+@Injectable()
+export class AlbumService {
+  private albums: Album[] = [];
+
+  create(dto: CreateAlbumDto): Album {
+    const newAlbum: Album = {
+      id: uuidv4(),
+      ...dto,
+    };
+    this.albums.push(newAlbum);
+    return newAlbum;
+  }
+
+  findAll(): Album[] {
+    return this.albums;
+  }
+
+  findOne(id: string): Album | undefined {
+    return this.albums.find((album) => album.id === id);
+  }
+
+  update(id: string, dto: UpdateAlbumDto): Album | undefined {
+    const album = this.findOne(id);
+    if (!album) return undefined;
+    Object.assign(album, dto);
+    return album;
+  }
+
+  delete(id: string): boolean {
+    const index = this.albums.findIndex((a) => a.id === id);
+    if (index === -1) return false;
+    this.albums.splice(index, 1);
+    return true;
+  }
+
+  nullifyArtist(artistId: string) {
+    this.albums.forEach((album) => {
+      if (album.artistId === artistId) {
+        album.artistId = null;
+      }
+    });
+  }
+
+  clearAll() {
+    this.albums = [];
+  }
+}
