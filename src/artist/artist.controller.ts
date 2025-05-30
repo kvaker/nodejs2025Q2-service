@@ -14,6 +14,7 @@ import {
 import { ArtistService } from './artist.service';
 import { CreateArtistDto } from './dto/create-artist.dto';
 import { UpdateArtistDto } from './dto/update-artist.dto';
+import { ValidationPipe } from '@nestjs/common';
 
 @Controller('artist')
 export class ArtistController {
@@ -41,7 +42,8 @@ export class ArtistController {
   @Put(':id')
   update(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @Body() dto: UpdateArtistDto,
+    @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+    dto: UpdateArtistDto,
   ) {
     const updated = this.artistService.update(id, dto);
     if (!updated) {
