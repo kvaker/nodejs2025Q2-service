@@ -59,6 +59,18 @@ export class TrackService {
     this.tracks.splice(index, 1);
   }
 
+  removeAlbumFromTracks(albumId: string): void {
+    this.tracks = this.tracks.map((track) =>
+      track.albumId === albumId ? { ...track, albumId: null } : track,
+    );
+  }
+
+  removeArtistFromTracks(artistId: string): void {
+    this.tracks = this.tracks.map((track) =>
+      track.artistId === artistId ? { ...track, artistId: null } : track,
+    );
+  }
+
   nullifyAlbumId(albumId: string): void {
     this.tracks.forEach((t) => {
       if (t.albumId === albumId) {

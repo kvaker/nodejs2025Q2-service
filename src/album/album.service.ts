@@ -3,10 +3,12 @@ import { Album } from './interfaces/album.interface';
 import { CreateAlbumDto } from './dto/create-album.dto';
 import { UpdateAlbumDto } from './dto/update-album.dto';
 import { v4 as uuidv4 } from 'uuid';
+import { TrackService } from 'src/track/track.service';
 
 @Injectable()
 export class AlbumService {
   private albums: Album[] = [];
+  private trackService: TrackService;
 
   create(dto: CreateAlbumDto): Album {
     const newAlbum: Album = {
@@ -39,8 +41,18 @@ export class AlbumService {
   delete(id: string): boolean {
     const index = this.albums.findIndex((a) => a.id === id);
     if (index === -1) return false;
+
     this.albums.splice(index, 1);
+
+    this.trackService.removeAlbumFromTracks(id);
+
     return true;
+  }
+
+  removeArtistFromAlbums(artistId: string): void {
+    this.albums = this.albums.map((album) =>
+      album.artistId === artistId ? { ...album, artistId: null } : album,
+    );
   }
 
   nullifyArtist(artistId: string) {

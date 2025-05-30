@@ -3,10 +3,14 @@ import { Artist } from './interfaces/artist.interface';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateArtistDto } from './dto/create-artist.dto';
 import { UpdateArtistDto } from './dto/update-artist.dto';
+import { TrackService } from 'src/track/track.service';
+import { AlbumService } from 'src/album/album.service';
 
 @Injectable()
 export class ArtistService {
   private artists: Artist[] = [];
+  private trackService: TrackService;
+  private albumService: AlbumService;
 
   getAll(): Artist[] {
     return this.artists;
@@ -40,8 +44,12 @@ export class ArtistService {
   delete(id: string): boolean {
     const index = this.artists.findIndex((a) => a.id === id);
     if (index === -1) return false;
+
     this.artists.splice(index, 1);
-    // TODO: update related albums/tracks/favorites
+
+    this.albumService.removeArtistFromAlbums(id);
+    this.trackService.removeArtistFromTracks(id);
+
     return true;
   }
 }
