@@ -9,7 +9,6 @@ import {
   HttpCode,
   HttpStatus,
   NotFoundException,
-  BadRequestException,
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { AlbumService } from './album.service';
