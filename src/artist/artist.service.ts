@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { Artist } from './interfaces/artist.interface';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateArtistDto } from './dto/create-artist.dto';
@@ -9,8 +14,14 @@ import { AlbumService } from 'src/album/album.service';
 @Injectable()
 export class ArtistService {
   private artists: Artist[] = [];
-  private trackService: TrackService;
-  private albumService: AlbumService;
+
+  constructor(
+    @Inject(forwardRef(() => AlbumService))
+    private readonly albumService: AlbumService,
+
+    @Inject(forwardRef(() => TrackService))
+    private readonly trackService: TrackService,
+  ) {}
 
   getAll(): Artist[] {
     return this.artists;

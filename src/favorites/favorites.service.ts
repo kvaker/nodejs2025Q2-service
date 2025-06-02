@@ -3,6 +3,7 @@ import {
   UnprocessableEntityException,
   Inject,
   forwardRef,
+  NotFoundException,
 } from '@nestjs/common';
 import { ArtistService } from 'src/artist/artist.service';
 import { AlbumService } from 'src/album/album.service';
@@ -27,18 +28,46 @@ export class FavoritesService {
     private readonly trackService: TrackService,
   ) {}
 
-  getAll() {
-    return this.favorites;
+  async getAll() {
+    const artists = await Promise.all(
+      this.favorites.artists.map((id) => {
+        try {
+          return this.artistService.findOne(id);
+        } catch {
+          return null;
+        }
+      }),
+    );
+
+    const albums = await Promise.all(
+      this.favorites.albums.map((id) => {
+        try {
+          return this.albumService.findOne(id);
+        } catch {
+          return null;
+        }
+      }),
+    );
+
+    const tracks = await Promise.all(
+      this.favorites.tracks.map((id) => {
+        try {
+          return this.trackService.findOne(id);
+        } catch {
+          return null;
+        }
+      }),
+    );
+
+    return {
+      artists: artists.filter(Boolean),
+      albums: albums.filter(Boolean),
+      tracks: tracks.filter(Boolean),
+    };
   }
 
   async add(entity: 'artists' | 'albums' | 'tracks', id: string) {
-    const exists = await this.validateEntityExists(entity, id);
-
-    if (!exists) {
-      throw new UnprocessableEntityException(
-        `${entity.slice(0, -1)} with id ${id} does not exist`,
-      );
-    }
+    await this.validateEntityExists(entity, id);
 
     if (!this.favorites[entity].includes(id)) {
       this.favorites[entity].push(id);
@@ -70,7 +99,7 @@ export class FavoritesService {
   private async validateEntityExists(
     entity: 'artists' | 'albums' | 'tracks',
     id: string,
-  ): Promise<boolean> {
+  ): Promise<void> {
     try {
       switch (entity) {
         case 'artists':
@@ -83,9 +112,13 @@ export class FavoritesService {
           await this.trackService.findOne(id);
           break;
       }
-      return true;
-    } catch {
-      return false;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new UnprocessableEntityException(
+          `${entity.slice(0, -1)} with id ${id} does not exist`,
+        );
+      }
+      throw error;
     }
   }
 }

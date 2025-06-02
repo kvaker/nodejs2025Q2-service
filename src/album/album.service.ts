@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  forwardRef,
+  Inject,
+  NotFoundException,
+} from '@nestjs/common';
 import { Album } from './interfaces/album.interface';
 import { CreateAlbumDto } from './dto/create-album.dto';
 import { UpdateAlbumDto } from './dto/update-album.dto';
@@ -8,7 +13,11 @@ import { TrackService } from 'src/track/track.service';
 @Injectable()
 export class AlbumService {
   private albums: Album[] = [];
-  private trackService: TrackService;
+
+  constructor(
+    @Inject(forwardRef(() => TrackService))
+    private readonly trackService: TrackService,
+  ) {}
 
   create(dto: CreateAlbumDto): Album {
     const newAlbum: Album = {
