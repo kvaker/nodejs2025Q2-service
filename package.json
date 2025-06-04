@@ -11,6 +11,7 @@
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
+    "audit": "npm audit",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -25,6 +26,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "migration:generate": "npm run build && typeorm migration:generate ./src/migrations/InitMigration -d dist/data-source.js",
     "migration:run": "typeorm migration:run -d dist/data-source.js",
+    "migration:run:docker": "docker-compose run --rm migration npm run migration:run",
     "migration:revert": "typeorm migration:revert -d dist/data-source.js"
   },
   "dependencies": {
