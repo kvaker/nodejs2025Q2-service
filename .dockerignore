@@ -4,8 +4,12 @@ dist
 .gitignore
 Dockerfile
 docker-compose.yml
+docker-compose.override.yml
 .env
 npm-debug.log
 test
+tests
 coverage
 *.spec.ts
+*.log
+*.md

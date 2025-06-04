@@ -10,11 +10,11 @@ services:
       - NODE_ENV=development
 
   migration:
-    build: .
+    build:
+      context: .
     command: npm run migration:generate
     volumes:
       - .:/usr/src/app
-      - /usr/src/app/node_modules
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgres://postgres:postgres@db:5432/home_library
