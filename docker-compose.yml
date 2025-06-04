@@ -21,7 +21,7 @@ services:
     environment:
       DATABASE_URL: postgres://postgres:postgres@db:5432/home_library
     ports:
-      - "3000:3000"
+      - "4000:4000"
     networks:
       - app-network
 
