@@ -7,7 +7,7 @@ services:
       - /usr/src/app/node_modules
     command: npm run start:dev
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=${NODE_ENV}
 
   migration:
     build:
@@ -16,8 +16,8 @@ services:
     volumes:
       - .:/usr/src/app
     environment:
-      - NODE_ENV=development
-      - DATABASE_URL=postgres://postgres:postgres@db:5432/home_library
+      - NODE_ENV=${NODE_ENV}
+      - DATABASE_URL=${DATABASE_URL}
     depends_on:
       - db
     networks:
