@@ -13,6 +13,7 @@
     "build": "nest build",
     "audit": "npm audit",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "start(docker)": "docker-compose up --build",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
