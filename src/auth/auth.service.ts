@@ -1,18 +1,41 @@
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
+import { UserService } from '../user/user.service';
+import { LoginDto } from './dto/login.dto';
+import { SignupDto } from './dto/signup.dto';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly userService: UserService) {}
 
   async signup(dto: SignupDto) {
+    const existingUser = this.userService
+      .getAll()
+      .find((user) => user.login === dto.login);
+    if (existingUser) {
+      throw new ForbiddenException('User with this login already exists');
+    }
+
     const hash = await bcrypt.hash(dto.password, 10);
-    return this.usersService.create({ ...dto, password: hash });
+    const user = await this.userService.create({ ...dto, password: hash });
+
+    return user;
   }
 
   async login(dto: LoginDto) {
-    const user = await this.usersService.findByLogin(dto.login);
-    if (!user || !(await bcrypt.compare(dto.password, user.password))) {
+    const user = this.userService
+      .getAll()
+      .find((user) => user.login === dto.login);
+    if (!user) {
+      throw new ForbiddenException('Invalid credentials');
+    }
+
+    const isPasswordValid = await bcrypt.compare(dto.password, user.password);
+    if (!isPasswordValid) {
       throw new ForbiddenException('Invalid credentials');
     }
 
@@ -28,7 +51,7 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  refresh(refreshToken: string) {
+  async refresh(refreshToken: string) {
     try {
       const payload = jwt.verify(
         refreshToken,
@@ -46,7 +69,7 @@ export class AuthService {
       );
       return { accessToken: newAccessToken, refreshToken: newRefreshToken };
     } catch {
-      throw new ForbiddenException('Invalid refresh token');
+      throw new ForbiddenException('Invalid or expired refresh token');
     }
   }
 }

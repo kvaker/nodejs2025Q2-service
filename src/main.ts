@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { LoggingService } from './common/logger/logging.service';
 import { LoggerInterceptor } from './common/logger/logger.interceptor';
 import { AllExceptionsFilter } from './common/logger/http-exception.filter';
+import { JwtGuard } from './common/guards/jwt.guard';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -25,6 +26,8 @@ async function bootstrap() {
   process.on('unhandledRejection', (reason) => {
     logger.error('Unhandled Rejection: ' + JSON.stringify(reason));
   });
+
+  app.useGlobalGuards(new JwtGuard());
 
   await app.listen(process.env.PORT || 4000);
 }
