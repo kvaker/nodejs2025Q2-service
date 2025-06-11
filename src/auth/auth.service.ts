@@ -27,9 +27,7 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const user = this.userService
-      .getAll()
-      .find((user) => user.login === dto.login);
+    const user = this.userService.getByLoginWithPassword(dto.login);
     if (!user) {
       throw new ForbiddenException('Invalid credentials');
     }
@@ -40,12 +38,25 @@ export class AuthService {
     }
 
     const payload = { id: user.id, login: user.login };
-    const accessToken = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-      expiresIn: process.env.TOKEN_EXPIRE_TIME,
+
+    const secretKey = process.env.JWT_SECRET_KEY;
+    const refreshSecretKey = process.env.JWT_SECRET_REFRESH_KEY;
+    const expireTime = parseInt(process.env.TOKEN_EXPIRE_TIME || '3600', 10);
+    const refreshExpireTime = parseInt(
+      process.env.TOKEN_REFRESH_EXPIRE_TIME || '604800',
+      10,
+    );
+
+    if (!secretKey || !refreshSecretKey || !expireTime || !refreshExpireTime) {
+      throw new Error('Missing JWT configuration');
+    }
+
+    const accessToken = jwt.sign(payload, secretKey, {
+      expiresIn: expireTime,
     });
 
-    const refreshToken = jwt.sign(payload, process.env.JWT_SECRET_REFRESH_KEY, {
-      expiresIn: process.env.TOKEN_REFRESH_EXPIRE_TIME,
+    const refreshToken = jwt.sign(payload, refreshSecretKey, {
+      expiresIn: refreshExpireTime,
     });
 
     return { accessToken, refreshToken };
@@ -55,19 +66,30 @@ export class AuthService {
     try {
       const payload = jwt.verify(
         refreshToken,
-        process.env.JWT_SECRET_REFRESH_KEY,
+        process.env.JWT_SECRET_REFRESH_KEY as string,
+      ) as jwt.JwtPayload;
+
+      const accessExpire = process.env
+        .TOKEN_EXPIRE_TIME as jwt.SignOptions['expiresIn'];
+      const refreshExpire = process.env
+        .TOKEN_REFRESH_EXPIRE_TIME as jwt.SignOptions['expiresIn'];
+
+      const newAccessToken = jwt.sign(
+        { id: payload.id, login: payload.login },
+        process.env.JWT_SECRET_KEY as string,
+        { expiresIn: accessExpire },
       );
-      const newAccessToken = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-        expiresIn: process.env.TOKEN_EXPIRE_TIME,
-      });
+
       const newRefreshToken = jwt.sign(
-        payload,
-        process.env.JWT_SECRET_REFRESH_KEY,
-        {
-          expiresIn: process.env.TOKEN_REFRESH_EXPIRE_TIME,
-        },
+        { id: payload.id, login: payload.login },
+        process.env.JWT_SECRET_REFRESH_KEY as string,
+        { expiresIn: refreshExpire },
       );
-      return { accessToken: newAccessToken, refreshToken: newRefreshToken };
+
+      return {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+      };
     } catch {
       throw new ForbiddenException('Invalid or expired refresh token');
     }
