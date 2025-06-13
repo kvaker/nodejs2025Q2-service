@@ -28,6 +28,10 @@ export class UserService {
     return clone;
   }
 
+  getByLoginWithPassword(login: string): User | undefined {
+    return this.users.find((u) => u.login === login);
+  }
+
   create(dto: CreateUserDto): Omit<User, 'password'> {
     if (!dto.login || !dto.password)
       throw new BadRequestException('Missing fields');
