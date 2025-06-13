@@ -37,7 +37,7 @@ export class AuthService {
       throw new ForbiddenException('Invalid credentials');
     }
 
-    const payload = { id: user.id, login: user.login };
+    const payload = { userId: user.id, login: user.login };
 
     const secretKey = process.env.JWT_SECRET_KEY;
     const refreshSecretKey = process.env.JWT_SECRET_REFRESH_KEY;
@@ -59,7 +59,7 @@ export class AuthService {
       expiresIn: refreshExpireTime,
     });
 
-    return { accessToken, refreshToken };
+    return { accessToken, refreshToken, userId: user.id };
   }
 
   async refresh(refreshToken: string) {

@@ -1,37 +1,39 @@
 import {
+  Injectable,
   CanActivate,
   ExecutionContext,
-  Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
+import { Reflector } from '@nestjs/core';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 @Injectable()
 export class JwtGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+
   canActivate(context: ExecutionContext): boolean {
-    const req = context.switchToHttp().getRequest();
-    const authHeader = req.headers['authorization'];
-
-    const openRoutes = [
-      { path: '/auth/signup', method: 'POST' },
-      { path: '/auth/login', method: 'POST' },
-      { path: '/auth/refresh', method: 'POST' },
-    ];
-
-    const isPublic = openRoutes.some(
-      (route) =>
-        req.path === route.path && req.method.toUpperCase() === route.method,
-    );
-
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
     if (isPublic) return true;
 
-    if (!authHeader || !authHeader.startsWith('Bearer '))
-      throw new UnauthorizedException('Missing bearer token');
+    const request = context.switchToHttp().getRequest();
+    const authHeader = request.headers['authorization'];
+
+    if (!authHeader)
+      throw new UnauthorizedException('Missing Authorization header');
+
+    const token = authHeader.split(' ')[1];
+    if (!token) throw new UnauthorizedException('Missing token');
 
     try {
-      const token = authHeader.split(' ')[1];
-      const payload = jwt.verify(token, process.env.JWT_SECRET_KEY);
-      req.user = payload;
+      const payload = jwt.verify(token, process.env.JWT_SECRET_KEY as string);
+      request.user = payload;
       return true;
     } catch {
       throw new UnauthorizedException('Invalid or expired token');
